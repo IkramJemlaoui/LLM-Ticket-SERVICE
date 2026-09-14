@@ -1,0 +1,18 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets
+.env
+.streamlit/secrets.toml
+
+# Generated data
+logs/*.jsonl
+*.log
+
+# Temporary files
+.audit_assets/
+.DS_Store
+Thumbs.db
