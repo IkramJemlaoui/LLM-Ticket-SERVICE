@@ -1,3 +1,6 @@
+
+<img width="1672" height="941" alt="cc410966-5fac-4f23-a8f9-e210a0c36f0a" src="https://github.com/user-attachments/assets/e5eecfa6-8059-450e-b0ca-4c2f74f2825e" />
+
 # AegisDesk AI — Company-Wide Request Intelligence
 
 AegisDesk AI is a cross-department request platform for an ecommerce company. Any department can request support, clarification, correction, or new work from another department. Five specialist agents turn plain-language requests into complete, prioritised and correctly routed cases, retrieve approved company knowledge and verified resolutions, and prepare evidence-backed recommendations while humans retain control of consequential actions.
