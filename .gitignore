@@ -11,8 +11,15 @@ __pycache__/
 # Generated data
 logs/*.jsonl
 *.log
+data/aegisdesk.db
+data/aegisdesk.db-shm
+data/aegisdesk.db-wal
+
+# Generated submission files (kept local)
+deliverables/
 
 # Temporary files
 .audit_assets/
+.rendered_review/
 .DS_Store
 Thumbs.db

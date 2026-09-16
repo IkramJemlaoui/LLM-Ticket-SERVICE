@@ -30,7 +30,7 @@ This repository is designed for classroom/demo use and demonstrates secure defau
 Support tickets can contain personal data such as names, email addresses, phone numbers, device identifiers, and internal context. The app applies the following controls:
 
 - email-like and phone-like values are redacted before telemetry logging
-- cloud inference redaction can be enabled for the ticket body
+- when cloud redaction is enabled, subject, description, and requester are each sanitized before provider calls
 - only approved support articles are used for grounding
 - no long-term storage of raw prompts beyond the local running session in demo mode
 
@@ -56,20 +56,26 @@ No arbitrary third-party tools are invoked by the model.
 
 ## Prompt & Output Safety
 
-- suspicious prompt-injection patterns are flagged
+- suspicious prompt-injection patterns stop the workflow before downstream agents run
 - generated replies are restricted to retrieved internal knowledge
-- low-confidence generations fall back to a safe clarification flow
+- retrieval matches below the configured confidence threshold are rejected and escalated
+- the Risk & Quality Agent checks taxonomy, prohibited security-bypass language, citation provenance, and evidence presence
 - max tokens and low temperature reduce uncontrolled outputs
+- agent execution is capped and no agent can send messages, mutate tickets, browse the web, or invoke arbitrary tools
+- customer-facing drafts require an explicit human approval event
 
 ## Logging & Monitoring
 
-Telemetry is written to `logs/app_events.jsonl` and includes only redacted metadata such as:
+Telemetry is written to `logs/app_events.jsonl` and includes only privacy-minimized metadata such as:
 
 - timestamp
 - prompt version
 - model/provider
 - latency
-- retrieval hits
+- per-agent status/latency
+- retrieval hits and scores
+- quality score and workflow state
+- token usage when supplied by the provider
 - refusal/fallback flags
 
 Do not ship raw user ticket bodies to shared logs in production.

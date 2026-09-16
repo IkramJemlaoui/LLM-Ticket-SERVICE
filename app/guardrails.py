@@ -2,7 +2,7 @@ import re
 from .models import GuardrailResult
 
 EMAIL_RE = re.compile(r"\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}\b")
-PHONE_RE = re.compile(r"(?:(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{2,4}\)?[\s.-]?)?\d{3}[\s.-]?\d{3,4}[\s.-]?\d{0,4})")
+PHONE_RE = re.compile(r"(?<!\w)(?:\+?\d[\d\s().-]{5,}\d)(?!\w)")
 SUSPICIOUS_PATTERNS = [
     r"ignore\s+previous\s+instructions",
     r"reveal\s+(the\s+)?system\s+prompt",
@@ -12,6 +12,7 @@ SUSPICIOUS_PATTERNS = [
     r"act\s+as\s+the\s+system",
     r"exfiltrate",
     r"print\s+all\s+hidden\s+instructions",
+    r"bypass\s+(mfa|security|authentication)",
 ]
 
 def redact_pii(text: str) -> tuple[str, bool]:

@@ -4,38 +4,47 @@
 Problem:
 Support tickets arrive incomplete, which slows agents and hurts SLA performance.
 
-## 0:30 - 2:00
-Show the app:
-- paste a vague ticket
-- click Generate AI assist
-- explain the summary
-- point out missing information prompts
-- show category and priority suggestion
-- show grounded first-reply draft with citations
+## 0:30 - 2:15
+Show **Page 1 — Employee Help Portal**:
+- enter a cross-department request from Operations about a sales metric that differs from Finance
+- select business impact, urgency, and affected-user inputs
+- analyse before submission and show team routing, the similar solved case, safe solution, documentation, and missing facts
+- explain the choice between successful self-service and submitting a routed ticket
 
-## 2:00 - 2:45
+Switch to **Page 2 — Support Workspace**:
+- show how the transparent priority score moves urgent unresolved cases to the top
+- select the incomplete VPN ticket
+- explain the summary, missing facts, category and priority
+- show the grounded editable draft
+- open **Agent orchestration** and follow the five role-separated handoffs
+- open **Evidence & controls** and distinguish approved articles from similar verified cases
+- demonstrate edit, approve, reject, reassign, escalate, and the separately controlled resolution-publishing step
+
+## 2:15 - 2:55
 Show guardrails:
-- run the injection example
-- show refusal
-- mention redacted telemetry and human review
+- select SD-1036
+- show the Safety & Privacy Agent stopping downstream agents
+- show that approval is disabled
+- mention field-level PII redaction and metadata-only telemetry
 
-## 2:45 - 3:45
+## 2:55 - 3:45
 Architecture fly-over:
-- UI
-- guardrails
-- retrieval over approved KB docs
-- managed LLM or mock mode
-- logging
+- five agents and deterministic orchestrator
+- two narrow LLM roles
+- thresholded RAG over approved articles and human-verified past solutions
+- independent quality/provenance validation
+- human release and workflow metrics
 
-## 3:45 - 4:30
+## 3:45 - 4:25
 Business value:
-- fewer clarifying loops
-- faster first response
-- more consistent triage
+- target −40% time to first qualified draft
+- target −25% triage rework
+- target ≥60% acceptance without material rewrite
+- clarify that these are pilot targets, not measured results
 
-## 4:30 - 4:55
+## 4:25 - 4:55
 Pilot ask:
-4-week pilot, one queue, 3 KPIs, human-in-the-loop.
+4-week pilot, one queue, named sponsor, approved KB, baseline, evaluation set and mandatory human approval.
 
 ## Notes
 Stay under 5 minutes. Truthfully disclose any AI media tools used for voiceover, editing, or avatar generation.
