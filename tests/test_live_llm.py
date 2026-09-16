@@ -7,7 +7,12 @@ import pytest
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from app.config import Settings
-from app.llm import LLMConfigurationError, OpenAICompatibleProvider, get_provider
+from app.llm import (
+    LLMConfigurationError,
+    OpenAICompatibleProvider,
+    filter_missing_information,
+    get_provider,
+)
 from app.models import TicketInput
 
 
@@ -277,3 +282,24 @@ def test_missing_information_does_not_repeat_ticket_description(monkeypatch):
     assert result.missing_information
     assert all(question not in description for question in result.missing_information)
     assert all(question.endswith("?") for question in result.missing_information)
+
+
+def test_ui_defence_filters_cached_repeated_context():
+    ticket = TicketInput(
+        subject="Data pipeline delay",
+        description=(
+            "The daily sales dataset has not been updated since 06:00. "
+            "Marketing and Operations are using yesterday's figures.\n"
+            "Operational context: business impact=Department; urgency=High; affected users=30."
+        ),
+    )
+    repeated = [
+        "The daily sales dataset has not been updated since 06:00. Marketing and Operations are using yesterday's figures.",
+        "Operational context: business impact=Department; urgency=High; affected users=30.",
+    ]
+
+    questions = filter_missing_information(ticket, "Data & Analytics", repeated)
+
+    assert questions
+    assert all("operational context" not in question.lower() for question in questions)
+    assert all("not been updated since 06:00" not in question.lower() for question in questions)

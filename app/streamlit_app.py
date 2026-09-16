@@ -24,7 +24,7 @@ from app.data_store import (
     update_ai_classification,
 )
 from app.pipeline import TicketCopilot
-from app.llm import LLMConfigurationError
+from app.llm import LLMConfigurationError, filter_missing_information
 from app.models import TicketInput
 
 
@@ -34,6 +34,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+ANALYSIS_VERSION = "2026-09-16-v3"
 
 initialize_database()
 settings = Settings()
@@ -338,6 +340,7 @@ def analyze_employee_request(
     business_impact: str,
     urgency: str,
     affected_users: int,
+    analysis_version: str,
 ):
     if copilot is None:
         raise LLMConfigurationError(llm_setup_error)
@@ -441,7 +444,7 @@ def render_employee_portal() -> None:
 
     signature = (
         subject.strip(), description.strip(), reporter.strip(), channel,
-        business_impact, urgency, int(affected_users),
+        business_impact, urgency, int(affected_users), ANALYSIS_VERSION,
     )
     if analyse:
         if len(subject.strip()) < 5 or len(description.strip()) < 15:
@@ -514,9 +517,20 @@ def render_employee_portal() -> None:
             unsafe_allow_html=True,
         )
 
+    visible_questions = filter_missing_information(
+        TicketInput(
+            subject=subject,
+            description=(
+                f"{description}\nOperational context: business impact={business_impact}; "
+                f"urgency={urgency}; affected users={int(affected_users)}."
+            ),
+        ),
+        result.category,
+        result.missing_information,
+    )
     st.markdown('<div class="intelligence-card"><div class="intel-label">Questions still missing</div>', unsafe_allow_html=True)
-    if result.missing_information:
-        for item in result.missing_information:
+    if visible_questions:
+        for item in visible_questions:
             st.markdown(f"- {item}")
     else:
         st.write("Your request contains the main diagnostic details.")

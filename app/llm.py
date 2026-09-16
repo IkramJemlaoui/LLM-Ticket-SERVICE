@@ -154,7 +154,7 @@ def _content_tokens(value: str) -> set[str]:
     }
 
 
-def _filter_missing_information(
+def filter_missing_information(
     ticket: TicketInput,
     category: str,
     candidates: object,
@@ -433,7 +433,7 @@ class OpenAICompatibleProvider:
             "temperature": min(self.settings.llm_temperature, 0.4),
             "max_tokens": min(
                 self.settings.llm_max_tokens,
-                300 if self.settings.llm_provider == "ollama" else 800,
+                500 if self.settings.llm_provider == "ollama" else 800,
             ),
             "response_format": {
                 "type": "json_schema",
@@ -539,8 +539,12 @@ class OpenAICompatibleProvider:
         schema = {
             "type": "object",
             "properties": {
-                "summary": {"type": "string"},
-                "missing_information": {"type": "array", "items": {"type": "string"}},
+                "summary": {"type": "string", "maxLength": 280},
+                "missing_information": {
+                    "type": "array",
+                    "items": {"type": "string", "maxLength": 160},
+                    "maxItems": 4,
+                },
                 "category": {"type": "string", "enum": ALLOWED_CATEGORIES},
                 "priority": {"type": "string", "enum": ALLOWED_PRIORITIES},
                 "confidence": {"type": "number", "minimum": 0, "maximum": 1},
@@ -562,7 +566,7 @@ class OpenAICompatibleProvider:
         if priority not in ALLOWED_PRIORITIES:
             priority = "Medium"
         confidence = max(0.0, min(float(data.get("confidence", 0.5)), 1.0))
-        missing_information = _filter_missing_information(
+        missing_information = filter_missing_information(
             ticket,
             category,
             data.get("missing_information", []),
