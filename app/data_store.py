@@ -216,6 +216,10 @@ def _seed_tickets(connection: sqlite3.Connection) -> None:
 
 def _infer_category(text: str) -> str:
     lowered = text.lower()
+    if any(word in lowered for word in ("leave balance", "leave request", "employee record", "people & hr")):
+        return "People & HR"
+    if any(word in lowered for word in ("invoice", "purchase order", "procurement", "supplier")):
+        return "Finance & Procurement"
     if any(word in lowered for word in ("power bi", "dashboard", "kpi", "semantic model")):
         return "Data & Analytics"
     if any(word in lowered for word in ("pipeline", "warehouse", "data lake", "schema drift")):

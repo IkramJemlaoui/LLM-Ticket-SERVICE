@@ -35,7 +35,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-ANALYSIS_VERSION = "2026-09-16-v3"
+ANALYSIS_VERSION = "2026-09-16-v4"
+AUTO_ROUTE_OPTION = "Not sure — let AegisDesk recommend"
 
 initialize_database()
 settings = Settings()
@@ -340,6 +341,7 @@ def analyze_employee_request(
     business_impact: str,
     urgency: str,
     affected_users: int,
+    requested_team: str,
     analysis_version: str,
 ):
     if copilot is None:
@@ -348,7 +350,7 @@ def analyze_employee_request(
         f"\n\nOperational context: business impact={business_impact}; "
         f"urgency={urgency}; affected users={affected_users}."
     )
-    return copilot.run(
+    result = copilot.run(
         TicketInput(
             subject=subject,
             description=description + operational_context,
@@ -356,6 +358,9 @@ def analyze_employee_request(
             channel=channel,
         )
     )
+    if requested_team != AUTO_ROUTE_OPTION and not result.refused:
+        result.assigned_team = requested_team
+    return result
 
 
 @st.dialog("Create a smart service ticket")
@@ -440,11 +445,16 @@ def render_employee_portal() -> None:
                 ["Web Portal", "Email", "Teams", "Slack", "Phone"],
                 help="Choose where you want to receive status updates or follow-up questions.",
             )
+        requested_team = st.selectbox(
+            "Which department should receive this ticket?",
+            [AUTO_ROUTE_OPTION, *SUPPORT_TEAMS],
+            help="Choose a department when you know the owner. Otherwise, AegisDesk recommends one from the request context.",
+        )
         analyse = st.form_submit_button("Analyse before submitting", type="primary", use_container_width=True)
 
     signature = (
         subject.strip(), description.strip(), reporter.strip(), channel,
-        business_impact, urgency, int(affected_users), ANALYSIS_VERSION,
+        business_impact, urgency, int(affected_users), requested_team, ANALYSIS_VERSION,
     )
     if analyse:
         if len(subject.strip()) < 5 or len(description.strip()) < 15:
@@ -542,13 +552,18 @@ def render_employee_portal() -> None:
 
     action_left, action_right = st.columns(2)
     with action_left:
-        if st.button("The suggested solution worked", type="primary", use_container_width=True, disabled=result.refused):
+        if st.button("The suggested solution worked", use_container_width=True, disabled=result.refused):
             st.session_state["employee_outcome"] = "solved"
             record_self_service_outcome(result.workflow_id, result.category, "solved_without_ticket")
             st.rerun()
     with action_right:
-        submit_label = "Submit to Security Operations" if result.refused else "Submit ticket to recommended team"
-        if st.button(submit_label, use_container_width=True):
+        submit_label = "Submit to Security Operations" if result.refused else "Submit ticket"
+        if st.button(submit_label, type="primary", use_container_width=True):
+            final_team = (
+                "Security Operations"
+                if result.refused
+                else requested_team if requested_team != AUTO_ROUTE_OPTION else result.assigned_team
+            )
             ticket_id = create_ticket(
                 subject=subject,
                 description=description,
@@ -562,10 +577,11 @@ def render_employee_portal() -> None:
                 ticket_id,
                 result.category,
                 result.priority,
-                assigned_team=result.assigned_team,
+                assigned_team=final_team,
             )
             record_self_service_outcome(result.workflow_id, result.category, "ticket_submitted")
             st.session_state["selected_ticket_id"] = ticket_id
+            st.session_state["submission_confirmation"] = (ticket_id, final_team)
             st.session_state["page_route"] = "Support Workspace"
             st.session_state.pop("employee_analysis", None)
             run_ticket.clear()
@@ -594,11 +610,10 @@ def render_header() -> None:
 def render_metrics(counts: dict[str, int]) -> None:
     cards = [
         ("Smart queue", str(counts["tickets"]), "Company requests in one prioritised feed", "accent-mint"),
-        ("Agentic control", "5 agents", "Bounded roles · max 6 steps", "accent-violet"),
         ("Grounding corpus", str(counts["articles"]), "Approved company articles", "accent-mint"),
         ("Case memory", str(counts["verified_solutions"]), "Human-verified reusable resolutions", "accent-amber"),
     ]
-    columns = st.columns(4)
+    columns = st.columns(3)
     for column, (label, value, note, accent) in zip(columns, cards):
         with column:
             st.markdown(
@@ -625,8 +640,6 @@ def render_filters(tickets: list[ServiceTicket]) -> tuple[list[ServiceTicket], s
     queue_counts = Counter(ticket.queue for ticket in tickets)
     with st.container():
         st.markdown('<div class="section-kicker">Portfolio</div><div class="section-title">Service queue</div>', unsafe_allow_html=True)
-        if st.button("+ Create ticket", type="primary", use_container_width=True):
-            create_ticket_dialog()
         search = st.text_input("Search", placeholder="Search ID or subject", label_visibility="collapsed")
         queue = st.radio(
             "Queue",
@@ -650,7 +663,12 @@ def render_filters(tickets: list[ServiceTicket]) -> tuple[list[ServiceTicket], s
         st.session_state["selected_ticket_id"] = selected_id
 
     st.markdown('<div class="section-kicker" style="margin-top:1rem">Cases</div>', unsafe_allow_html=True)
-    for ticket in visible:
+    show_all_cases = st.toggle("Show all cases", value=False)
+    displayed = list(visible) if show_all_cases else list(visible[:6])
+    if not show_all_cases and selected_id not in {item.ticket_id for item in displayed}:
+        selected_ticket = next(item for item in visible if item.ticket_id == selected_id)
+        displayed = [selected_ticket, *[item for item in displayed if item.ticket_id != selected_id]][:6]
+    for ticket in displayed:
         label = f"{ticket.ticket_id}  ·  {ticket.priority}  ·  {ticket.priority_score}/100\n{ticket.subject}"
         if st.button(
             label,
@@ -660,6 +678,8 @@ def render_filters(tickets: list[ServiceTicket]) -> tuple[list[ServiceTicket], s
         ):
             st.session_state["selected_ticket_id"] = ticket.ticket_id
             st.rerun()
+    if not show_all_cases and len(visible) > len(displayed):
+        st.caption(f"Showing {len(displayed)} priority cases. Enable 'Show all cases' to browse {len(visible)} cases.")
     st.caption("The feed is sorted by open status, priority score, severity and age. Select SD-1036 to demonstrate a stopped unsafe workflow.")
     return visible, selected_id
 
@@ -769,12 +789,16 @@ def render_copilot(ticket: ServiceTicket, result) -> None:
                 st.session_state[feedback_key] = "not_relevant"
                 st.rerun()
 
-    st.caption("MISSING INFORMATION")
+def render_response_workspace(ticket: ServiceTicket, result) -> None:
+    st.markdown(
+        '<div class="section-kicker assist-kicker">Employee response</div>'
+        '<div class="section-title">Review and send the answer</div>',
+        unsafe_allow_html=True,
+    )
     if result.missing_information:
-        for item in result.missing_information:
-            st.markdown(f"- {item}")
-    else:
-        st.write("No material information gap detected.")
+        with st.expander("Information still needed", expanded=False):
+            for item in result.missing_information:
+                st.markdown(f"- {item}")
 
     st.caption("FINAL RESPONSE TO THE EMPLOYEE · EDITABLE AND GROUNDED")
     draft = st.text_area(
@@ -913,6 +937,10 @@ def render_support_workspace_page() -> None:
     render_purpose()
     counts = database_counts()
     render_metrics(counts)
+    confirmation = st.session_state.pop("submission_confirmation", None)
+    if confirmation:
+        ticket_id, assigned_team = confirmation
+        st.success(f"{ticket_id} was submitted successfully and assigned to {assigned_team}.")
 
     if "selected_ticket_id" not in st.session_state:
         st.session_state["selected_ticket_id"] = "SD-1041"
@@ -939,6 +967,7 @@ def render_support_workspace_page() -> None:
             ticket_col, copilot_col = st.columns([1.08, 0.92], gap="large")
             with ticket_col:
                 render_ticket(ticket)
+                render_response_workspace(ticket, result)
             with copilot_col:
                 render_copilot(ticket, result)
         with trace_tab:

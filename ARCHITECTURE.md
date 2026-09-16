@@ -105,7 +105,7 @@ Live mode fails visibly when credentials or the provider are unavailable. The UI
 - configuration in environment variables;
 - privacy-minimized operational telemetry in `logs/app_events.jsonl`.
 
-The first-run seed contains 27 synthetic tickets, including 16 human-labelled verified resolutions, and 15 approved articles spanning workplace IT, ecommerce checkout/fulfillment, data pipelines, and Power BI/KPI support. User-created tickets persist locally. Tickets may contain personal or confidential information and are treated as restricted operational data. Only approved articles and resolutions explicitly verified by a human are eligible for retrieval. KB governance should have named content owners in a pilot.
+The first-run seed contains 27 synthetic tickets, including 16 human-labelled verified resolutions, and 20 approved articles spanning workplace IT, ecommerce checkout/fulfillment, data pipelines, cross-department routing, Finance, and HR. Fifteen governed use cases provide repeatable routing and safety evaluations; they do not fine-tune model weights. User-created tickets persist locally. Tickets may contain personal or confidential information and are treated as restricted operational data. Only approved articles and resolutions explicitly verified by a human are eligible for retrieval. KB governance should have named content owners in a pilot.
 
 ### Retrieval flow
 

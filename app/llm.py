@@ -105,6 +105,31 @@ def _explicit_owner_category(text: str) -> str | None:
 
 def _high_confidence_business_category(text: str) -> str | None:
     normalized = " ".join(text.lower().split())
+    if any(signal in normalized for signal in ("phishing", "malware", "ransomware", "data breach")):
+        return "Security & Privacy"
+    if any(
+        signal in normalized
+        for signal in (
+            "vpn",
+            "shared folder access",
+            "shared drive access",
+            "password reset",
+            "administrator access",
+        )
+    ):
+        return "Identity & Access"
+    if any(
+        signal in normalized
+        for signal in (
+            "checkout",
+            "payment succeeds",
+            "order remains unconfirmed",
+            "duplicate fulfilment",
+            "duplicate fulfillment",
+            "duplicate orders",
+        )
+    ):
+        return "Ecommerce & Customer Experience"
     if any(
         signal in normalized
         for signal in (
@@ -132,6 +157,16 @@ def _high_confidence_business_category(text: str) -> str | None:
     )
     if any(signal in normalized for signal in data_reconciliation_signals):
         return "Data & Analytics"
+    if any(signal in normalized for signal in ("redirected to the login page", "inventory application")):
+        return "Business Applications"
+    if any(signal in normalized for signal in ("microphone", "meeting audio", "shared team storage", "disk space")):
+        return "Workplace Technology"
+    if any(signal in normalized for signal in ("works using its ip address", "company web address", "dns")):
+        return "Network & Connectivity"
+    if any(signal in normalized for signal in ("leave balance", "approved leave request", "hr statement")):
+        return "People & HR"
+    if "invoice" in normalized and any(signal in normalized for signal in ("purchase order", "po amount", "invoice total")):
+        return "Finance & Procurement"
     return None
 
 
@@ -189,6 +224,9 @@ def filter_missing_information(
 
 
 def _heuristic_category(text: str) -> str:
+    governed_category = _high_confidence_business_category(text)
+    if governed_category:
+        return governed_category
     t = text.lower()
     if any(k in t for k in ["phishing", "security", "suspicious", "malware", "breach", "ransomware"]):
         return "Security & Privacy"
@@ -527,6 +565,11 @@ class OpenAICompatibleProvider:
             "experiencing the impact. When the request explicitly names an owner, align the category to that owner. "
             "The missing_information array must contain only concise questions about facts that are genuinely absent. "
             "Never repeat, paraphrase, or restate facts already present in the subject or description. "
+            "Routing examples: sales/Finance total mismatch, dashboards, datasets and pipelines -> Data & Analytics; "
+            "VPN and shared-folder permissions -> Identity & Access; checkout and duplicate orders -> Ecommerce & Customer Experience; "
+            "application login loops -> Business Applications; meeting audio and device storage -> Workplace Technology; "
+            "IP works but company hostname fails -> Network & Connectivity; leave balance -> People & HR; "
+            "invoice versus purchase-order mismatch -> Finance & Procurement; phishing -> Security & Privacy. "
             f"Allowed categories: {', '.join(ALLOWED_CATEGORIES)}. "
             f"Allowed priorities: {', '.join(ALLOWED_PRIORITIES)}. "
             "Identify missing operational facts. Do not invent details. Confidence must be between 0 and 1."

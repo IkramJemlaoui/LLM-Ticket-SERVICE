@@ -14,6 +14,10 @@ def test_streamlit_app_renders_without_exception():
     assert not app.exception
     assert any(button.label == "Analyse before submitting" for button in app.button)
     assert any(text_input.label == "Short summary" for text_input in app.text_input)
+    assert any(
+        selectbox.label == "Which department should receive this ticket?"
+        for selectbox in app.selectbox
+    )
 
     next(item for item in app.text_input if item.label == "Short summary").set_value(
         "Operations dashboard revenue differs from Finance"
@@ -29,7 +33,7 @@ def test_streamlit_app_renders_without_exception():
     assert not app.exception
     assert any("A similar request was solved" in item.value for item in app.markdown)
     assert any("Data &amp; Analytics Team" in item.value or "Data & Analytics Team" in item.value for item in app.markdown)
-    assert any(button.label == "Submit ticket to recommended team" for button in app.button)
+    assert any(button.label == "Submit ticket" for button in app.button)
 
     view_selector = next(radio for radio in app.radio if radio.label == "Choose your view")
     app = view_selector.set_value("Support Workspace").run()
@@ -38,10 +42,5 @@ def test_streamlit_app_renders_without_exception():
     assert len(app.tabs) == 4
     assert len(app.text_area) == 1
     assert any(button.label == "Approve draft" for button in app.button)
-    create_button = next(button for button in app.button if button.label == "+ Create ticket")
-
-    app = create_button.click().run()
-
-    assert not app.exception
-    assert any(text_input.label == "Short summary" for text_input in app.text_input)
-    assert any(button.label == "Create and run agents" for button in app.button)
+    assert not any(button.label == "+ Create ticket" for button in app.button)
+    assert any(toggle.label == "Show all cases" for toggle in app.toggle)

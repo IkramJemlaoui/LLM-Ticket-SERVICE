@@ -60,7 +60,7 @@ ROI = minutes saved × eligible volume × loaded labor cost − run cost.
 
 ## 8. Scale thesis and ask
 
-**Current:** Light Streamlit workspace, SQLite persistence, smart intake, urgency ranking, accountable ecommerce/IT/data/BI routing, visible similar-case solutions, approved tips, and TF-IDF top-3 RAG over 15 articles and 16 verified cases.<br>
+**Current:** Light Streamlit workspace, SQLite persistence, smart intake, urgency ranking, accountable cross-department routing, visible similar-case solutions, approved tips, and TF-IDF top-3 RAG over 20 articles and 16 verified cases.<br>
 **Roadmap:** SSO/RBAC, ITSM API, managed monitoring, evaluated hybrid retrieval.
 
 Ask for one queue, a named sponsor, approved knowledge/data, security/privacy participation, and four weeks to prove value.

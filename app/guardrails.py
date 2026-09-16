@@ -4,8 +4,8 @@ from .models import GuardrailResult
 EMAIL_RE = re.compile(r"\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}\b")
 PHONE_RE = re.compile(r"(?<!\w)(?:\+?\d[\d\s().-]{5,}\d)(?!\w)")
 SUSPICIOUS_PATTERNS = [
-    r"ignore\s+previous\s+instructions",
-    r"reveal\s+(the\s+)?system\s+prompt",
+    r"ignore\s+(all\s+)?previous\s+instructions",
+    r"reveal\s+((the|your)\s+)?system\s+prompt",
     r"developer\s+mode",
     r"jailbreak",
     r"do\s+not\s+follow\s+policy",

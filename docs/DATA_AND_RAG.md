@@ -13,7 +13,7 @@ The running application uses a local SQLite database at `data/aegisdesk.db`. It 
 | Retrieval usefulness feedback | SQLite `retrieval_feedback` table | explicit Useful / Not relevant review actions in the UI |
 | Agent telemetry | `logs/app_events.jsonl` | generated at runtime; raw ticket and draft content are excluded |
 
-The seed currently creates 27 synthetic tickets, 15 approved articles, and 16 human-labelled verified resolutions. The corpus represents an ecommerce company with workplace IT, checkout/order operations, data engineering, and BI/Power BI support. This is a demonstration corpus, not production training data or a statistically representative evaluation set.
+The seed currently creates 27 synthetic tickets, 20 approved articles, and 16 human-labelled verified resolutions. Fifteen governed use cases provide routing and safety regression coverage. The corpus represents an ecommerce company with workplace IT, checkout/order operations, data engineering, analytics, Finance, HR, and cross-department support. This is a demonstration corpus, not production model-weight training data or a statistically representative evaluation set.
 
 ## Is this RAG?
 

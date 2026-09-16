@@ -9,7 +9,7 @@ The first page is designed for employees. Analysis happens before any ticket is 
 3. The Triage Agent classifies the request and deterministic policy recommends an accountable team.
 4. The Knowledge Agent searches approved articles and human-verified resolved cases.
 5. The portal immediately displays the request type, team, intake priority, closest solved case, safe proposed solution, approved explanation/tips, and missing information.
-6. The employee chooses either **The suggested solution worked** or **Submit ticket to recommended team**.
+6. The employee chooses either **The suggested solution worked** or **Submit ticket**. A known destination department can be selected; otherwise AegisDesk recommends one.
 
 If self-service works, no unnecessary ticket is created and a privacy-minimized outcome event is recorded. If the ticket is submitted, it is persisted in SQLite, routed to the recommended team, selected in the Support Workspace, and placed according to its priority score. Unsafe input receives no troubleshooting instructions and can only follow the security-review path.
 

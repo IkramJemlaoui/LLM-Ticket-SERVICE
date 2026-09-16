@@ -42,7 +42,7 @@ See [Agent Workflow](docs/AGENT_WORKFLOW.md) for inputs, outputs, handoffs, deci
 | Agent orchestration | Five bounded roles, typed state, conditional stop/escalation | Durable workflow service and queue |
 | Inference | Real Qwen 2.5 model running locally through Ollama; OpenAI/Azure remain optional; explicit mock only for tests | Evaluated local or managed model release process |
 | Retrieval | TF-IDF RAG over approved articles + human-verified resolved cases, thresholded top-3 | Evaluated hybrid/vector retrieval if justified |
-| Data | Local SQLite; 27 seeded tickets, 15 articles, 16 verified solutions | Managed relational store, retention and access policies |
+| Data | Local SQLite; 27 seeded tickets, 20 articles, 16 verified solutions, and 15 governed routing evaluations | Managed relational store, retention and access policies |
 | Human control | Approve, escalate, or publish a verified resolution; no automatic send | RBAC-backed release workflow |
 | Observability | Redacted JSONL workflow, agent latency, quality and retrieval metrics | Managed dashboards, alerts, SLOs and cost reporting |
 | Identity/integration | Local demonstration only | Enterprise SSO, RBAC and ticketing integration |
