@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import requests
 from typing import List
 
@@ -104,6 +105,18 @@ def _explicit_owner_category(text: str) -> str | None:
 
 def _high_confidence_business_category(text: str) -> str | None:
     normalized = " ".join(text.lower().split())
+    if any(
+        signal in normalized
+        for signal in (
+            "dashboard",
+            "dataset",
+            "data pipeline",
+            "data refresh",
+            "reporting metric",
+            "kpi",
+        )
+    ):
+        return "Data & Analytics"
     data_reconciliation_signals = (
         "sales total",
         "finance total",
@@ -120,6 +133,59 @@ def _high_confidence_business_category(text: str) -> str | None:
     if any(signal in normalized for signal in data_reconciliation_signals):
         return "Data & Analytics"
     return None
+
+
+_QUESTION_WORDS = {
+    "what", "which", "when", "where", "who", "why", "how", "is", "are", "was",
+    "were", "did", "does", "do", "can", "could", "would", "please", "provide",
+    "confirm", "share", "specify", "describe",
+}
+_COMPARISON_STOPWORDS = _QUESTION_WORDS | {
+    "a", "an", "and", "or", "the", "to", "of", "for", "from", "in", "on", "with",
+    "that", "this", "it", "your", "you", "team", "affected", "needed", "information",
+}
+
+
+def _content_tokens(value: str) -> set[str]:
+    return {
+        token
+        for token in re.findall(r"[a-z0-9]+", value.lower())
+        if token not in _COMPARISON_STOPWORDS
+    }
+
+
+def _filter_missing_information(
+    ticket: TicketInput,
+    category: str,
+    candidates: object,
+) -> List[str]:
+    context = f"{ticket.subject} {ticket.description}"
+    context_normalized = " ".join(re.findall(r"[a-z0-9]+", context.lower()))
+    context_tokens = _content_tokens(context)
+    useful: List[str] = []
+    seen: set[str] = set()
+
+    if isinstance(candidates, list):
+        for raw_item in candidates:
+            item = " ".join(str(raw_item).split()).strip(" -•")
+            if not item:
+                continue
+            item_normalized = " ".join(re.findall(r"[a-z0-9]+", item.lower()))
+            item_tokens = _content_tokens(item)
+            already_answered = bool(item_normalized and item_normalized in context_normalized)
+            if item_tokens:
+                overlap = len(item_tokens & context_tokens) / len(item_tokens)
+                already_answered = already_answered or overlap >= 0.75
+            first_word = item_normalized.split(" ", 1)[0] if item_normalized else ""
+            question_like = item.endswith("?") or first_word in _QUESTION_WORDS
+            if already_answered or not question_like or item_normalized in seen:
+                continue
+            seen.add(item_normalized)
+            useful.append(item if item.endswith("?") else f"{item.rstrip('.')}?")
+
+    if not useful:
+        useful = _missing_info(ticket.subject, ticket.description, category)
+    return useful[:5]
 
 
 def _heuristic_category(text: str) -> str:
@@ -459,6 +525,8 @@ class OpenAICompatibleProvider:
             "not only technical incidents. Return the required structured object. "
             "Route by the team that owns the affected service or requested work, not by the department "
             "experiencing the impact. When the request explicitly names an owner, align the category to that owner. "
+            "The missing_information array must contain only concise questions about facts that are genuinely absent. "
+            "Never repeat, paraphrase, or restate facts already present in the subject or description. "
             f"Allowed categories: {', '.join(ALLOWED_CATEGORIES)}. "
             f"Allowed priorities: {', '.join(ALLOWED_PRIORITIES)}. "
             "Identify missing operational facts. Do not invent details. Confidence must be between 0 and 1."
@@ -494,12 +562,14 @@ class OpenAICompatibleProvider:
         if priority not in ALLOWED_PRIORITIES:
             priority = "Medium"
         confidence = max(0.0, min(float(data.get("confidence", 0.5)), 1.0))
-        missing_information = data.get("missing_information", [])
-        if not isinstance(missing_information, list):
-            missing_information = []
+        missing_information = _filter_missing_information(
+            ticket,
+            category,
+            data.get("missing_information", []),
+        )
         return TriageDecision(
             summary=str(data.get("summary", "Ticket requires agent review.")),
-            missing_information=[str(item) for item in missing_information][:5],
+            missing_information=missing_information,
             category=category,
             priority=priority,
             confidence=confidence,

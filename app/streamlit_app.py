@@ -514,7 +514,7 @@ def render_employee_portal() -> None:
             unsafe_allow_html=True,
         )
 
-    st.markdown('<div class="intelligence-card"><div class="intel-label">Information that would help the team</div>', unsafe_allow_html=True)
+    st.markdown('<div class="intelligence-card"><div class="intel-label">Questions still missing</div>', unsafe_allow_html=True)
     if result.missing_information:
         for item in result.missing_information:
             st.markdown(f"- {item}")

@@ -227,3 +227,53 @@ def test_reconciliation_discrepancy_uses_data_analytics_policy(monkeypatch):
 
     assert result.category == "Data & Analytics"
     assert result.assigned_team == "Data & Analytics Team"
+
+
+def test_missing_information_does_not_repeat_ticket_description(monkeypatch):
+    description = (
+        "Completed orders from today are missing from the daily operations dashboard. "
+        "The Paris warehouse cannot prepare the dispatch plan."
+    )
+
+    def fake_post(url, headers, json, timeout):
+        return FakeResponse(
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json_module.dumps(
+                                {
+                                    "summary": "Warehouse orders are missing from a dashboard.",
+                                    "missing_information": [
+                                        "Completed orders from today are missing from the daily operations dashboard.",
+                                        "The Paris warehouse cannot prepare the dispatch plan.",
+                                    ],
+                                    "category": "Business Applications",
+                                    "priority": "High",
+                                    "confidence": 0.8,
+                                }
+                            )
+                        }
+                    }
+                ]
+            }
+        )
+
+    monkeypatch.setattr("app.llm.requests.post", fake_post)
+    provider = OpenAICompatibleProvider(
+        Settings(
+            llm_provider="ollama",
+            llm_base_url="http://localhost:11434/v1",
+            llm_api_key="ollama",
+            llm_model="qwen2.5:0.5b-instruct",
+        )
+    )
+    result = provider.triage(
+        TicketInput(subject="Missing warehouse orders", description=description)
+    )
+
+    assert result.category == "Data & Analytics"
+    assert result.assigned_team == "Data & Analytics Team"
+    assert result.missing_information
+    assert all(question not in description for question in result.missing_information)
+    assert all(question.endswith("?") for question in result.missing_information)
