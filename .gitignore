@@ -23,3 +23,6 @@ deliverables/
 .rendered_review/
 .DS_Store
 Thumbs.db
+
+# Local documentation
+docs/
