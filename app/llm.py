@@ -102,6 +102,26 @@ def _explicit_owner_category(text: str) -> str | None:
     return None
 
 
+def _high_confidence_business_category(text: str) -> str | None:
+    normalized = " ".join(text.lower().split())
+    data_reconciliation_signals = (
+        "sales total",
+        "finance total",
+        "totals do not match",
+        "totals don't match",
+        "numbers do not match",
+        "numbers don't match",
+        "kpi discrepancy",
+        "metric discrepancy",
+        "which orders are included",
+        "report total is lower",
+        "dashboard total is lower",
+    )
+    if any(signal in normalized for signal in data_reconciliation_signals):
+        return "Data & Analytics"
+    return None
+
+
 def _heuristic_category(text: str) -> str:
     t = text.lower()
     if any(k in t for k in ["phishing", "security", "suspicious", "malware", "breach", "ransomware"]):
@@ -347,7 +367,7 @@ class OpenAICompatibleProvider:
             "temperature": min(self.settings.llm_temperature, 0.4),
             "max_tokens": min(
                 self.settings.llm_max_tokens,
-                450 if self.settings.llm_provider == "ollama" else 800,
+                300 if self.settings.llm_provider == "ollama" else 800,
             ),
             "response_format": {
                 "type": "json_schema",
@@ -462,11 +482,12 @@ class OpenAICompatibleProvider:
         }
         data = self._request_json(system, user, "aegisdesk_triage", schema)
         category = data.get("category", "General Business Request")
-        explicit_owner_category = _explicit_owner_category(
-            f"{ticket.subject} {ticket.description}"
+        ticket_text = f"{ticket.subject} {ticket.description}"
+        policy_category = _explicit_owner_category(ticket_text) or _high_confidence_business_category(
+            ticket_text
         )
-        if explicit_owner_category:
-            category = explicit_owner_category
+        if policy_category:
+            category = policy_category
         priority = data.get("priority", "Medium")
         if category not in ALLOWED_CATEGORIES:
             category = "General Business Request"

@@ -935,7 +935,7 @@ def render_support_workspace_page() -> None:
             render_activity(ticket)
 
     st.markdown(
-        f'<div class="footer-note">CURRENT PoC · Streamlit · SQLite persistence · {escape(result.raw_provider)} provider · TF-IDF RAG over approved articles + verified cases · privacy-safe JSONL telemetry &nbsp;&nbsp;|&nbsp;&nbsp; ROADMAP · enterprise SSO/RBAC · Jira/ITSM API · managed monitoring</div>',
+        f'<div class="footer-note">CURRENT PoC · Streamlit · SQLite persistence · {escape(result.raw_provider)} / {escape(settings.llm_model)} · TF-IDF RAG over approved articles + verified cases · privacy-safe JSONL telemetry &nbsp;&nbsp;|&nbsp;&nbsp; ROADMAP · enterprise SSO/RBAC · Jira/ITSM API · managed monitoring</div>',
         unsafe_allow_html=True,
     )
 
@@ -944,7 +944,7 @@ st.markdown(APP_CSS, unsafe_allow_html=True)
 if copilot is None:
     setup_hint = (
         "LLM_PROVIDER=ollama\nOLLAMA_BASE_URL=http://localhost:11434/v1\n"
-        "OLLAMA_MODEL=qwen2.5:latest"
+        "OLLAMA_MODEL=qwen2.5:0.5b-instruct"
         if settings.llm_provider == "ollama"
         else "LLM_PROVIDER=openai\nOPENAI_API_KEY=your-secret-key\n"
         "OPENAI_BASE_URL=https://api.openai.com/v1\nOPENAI_MODEL=your-model-id"

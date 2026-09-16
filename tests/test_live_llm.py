@@ -185,3 +185,45 @@ def test_explicit_service_owner_overrides_model_impact_routing(monkeypatch):
 
     assert result.category == "Data & Analytics"
     assert result.assigned_team == "Data & Analytics Team"
+
+
+def test_reconciliation_discrepancy_uses_data_analytics_policy(monkeypatch):
+    def fake_post(url, headers, json, timeout):
+        return FakeResponse(
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json_module.dumps(
+                                {
+                                    "summary": "Sales and Finance totals differ.",
+                                    "missing_information": ["Which reporting date is affected?"],
+                                    "category": "Business Applications",
+                                    "priority": "Medium",
+                                    "confidence": 0.7,
+                                }
+                            )
+                        }
+                    }
+                ]
+            }
+        )
+
+    monkeypatch.setattr("app.llm.requests.post", fake_post)
+    provider = OpenAICompatibleProvider(
+        Settings(
+            llm_provider="ollama",
+            llm_base_url="http://localhost:11434/v1",
+            llm_api_key="ollama",
+            llm_model="qwen2.5:0.5b-instruct",
+        )
+    )
+    result = provider.triage(
+        TicketInput(
+            subject="Sales total does not match Finance total",
+            description="Yesterday's sales total is lower. Which orders are included?",
+        )
+    )
+
+    assert result.category == "Data & Analytics"
+    assert result.assigned_team == "Data & Analytics Team"

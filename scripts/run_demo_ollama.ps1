@@ -2,9 +2,9 @@ $ErrorActionPreference = "Stop"
 
 $env:LLM_PROVIDER = "ollama"
 $env:OLLAMA_BASE_URL = "http://localhost:11434/v1"
-$env:OLLAMA_MODEL = "qwen2.5:latest"
+$env:OLLAMA_MODEL = "qwen2.5:0.5b-instruct"
 $env:OLLAMA_API_KEY = "ollama"
-$env:LLM_TIMEOUT_SECONDS = "180"
+$env:LLM_TIMEOUT_SECONDS = "60"
 $env:ALLOW_MOCK_FALLBACK = "false"
 
 try {

@@ -85,7 +85,7 @@ See [User Views](docs/USER_VIEWS.md) for the complete interaction and control bo
 
 - Python 3.11+
 - [Ollama](https://docs.ollama.com/quickstart) running locally
-- the local `qwen2.5:latest` model (`ollama pull qwen2.5` if it is not already installed)
+- the local `qwen2.5:0.5b-instruct` model (`ollama pull qwen2.5:0.5b-instruct` if it is not already installed)
 
 ### Windows PowerShell
 
@@ -118,8 +118,9 @@ The project is configured for free local inference by default. Ollama requires n
 Important controls:
 
 - `LLM_PROVIDER=ollama` activates the real local model at `http://localhost:11434/v1`;
-- `OLLAMA_MODEL=qwen2.5:latest` selects the installed quality model;
-- `LLM_TIMEOUT_SECONDS=180` allows slower local CPU generation to finish;
+- `OLLAMA_MODEL=qwen2.5:0.5b-instruct` selects the responsive local demo model;
+- `LLM_TIMEOUT_SECONDS=60` bounds local generation so the interface does not wait indefinitely;
+- use `qwen2.5:latest` with a larger timeout only as an optional higher-quality, slower profile;
 - `LLM_PROVIDER=openai` remains an optional paid cloud path;
 - `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `OPENAI_MODEL` configure live inference;
 - `LLM_PROVIDER=mock` is an explicit automated-test mode, never a silent live fallback;

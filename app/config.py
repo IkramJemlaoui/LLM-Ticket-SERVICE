@@ -37,7 +37,7 @@ def _provider_api_key() -> str:
 def _provider_model() -> str:
     provider = _provider_name()
     if provider == "ollama":
-        return os.getenv("OLLAMA_MODEL", "qwen2.5:latest")
+        return os.getenv("OLLAMA_MODEL", "qwen2.5:0.5b-instruct")
     if provider == "openai":
         return os.getenv("OPENAI_MODEL", "")
     return os.getenv("LLM_MODEL", "")
@@ -47,7 +47,7 @@ def _provider_timeout_seconds() -> int:
     configured = os.getenv("LLM_TIMEOUT_SECONDS")
     if configured:
         return int(configured)
-    return 180 if _provider_name() == "ollama" else 45
+    return 60 if _provider_name() == "ollama" else 45
 
 
 @dataclass(frozen=True)
